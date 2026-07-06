@@ -27,6 +27,12 @@ def test_moeda_desconhecida_nao_pertence_ao_enum():
         Moeda("XYZ")
 
 
+def test_moeda_e_case_sensitive():
+    # Códigos ISO são maiúsculos; "usd" deve ser rejeitado, não normalizado.
+    with pytest.raises(ValueError):
+        Moeda("usd")
+
+
 def test_brl_nao_e_moeda_de_exposicao():
     # BRL é a moeda-destino implícita da consolidação, não uma moeda de exposição.
     assert "BRL" not in {m.value for m in Moeda}

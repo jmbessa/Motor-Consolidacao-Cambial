@@ -76,6 +76,11 @@ def test_rejeita_id_so_espacos():
         _exposicao_valida(id="   ")
 
 
+def test_id_e_normalizado_com_strip():
+    # Espaços em volta são removidos: "  1  " -> "1".
+    assert _exposicao_valida(id="  1  ").id == "1"
+
+
 def test_rejeita_campo_extra():
     with pytest.raises(ValidationError):
         _exposicao_valida(natureza="payable")
