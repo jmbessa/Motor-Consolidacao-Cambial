@@ -84,6 +84,14 @@ def test_registro_de_cache_malformado_e_tratado_como_miss(tmp_path):
     assert cotacoes[0].taxa_compra == Decimal("5.0599")
 
 
+def test_falha_ao_salvar_nao_descarta_resultado(tmp_path, monkeypatch):
+    inner = _ProviderContador()
+    cache = CacheCotacaoProvider(inner, cache_dir=tmp_path)
+    monkeypatch.setattr(cache, "_salvar", lambda: (_ for _ in ()).throw(OSError("disco cheio")))
+    cotacoes = cache.buscar_cotacoes(Moeda.USD, date(2026, 6, 1), date(2026, 6, 8))
+    assert cotacoes[0].taxa_compra == Decimal("5.0599")  # resultado preservado apesar do erro de escrita
+
+
 def test_round_trip_preserva_timestamp_tz_aware(tmp_path):
     from datetime import datetime
     from zoneinfo import ZoneInfo

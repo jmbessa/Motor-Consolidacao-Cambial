@@ -1,4 +1,10 @@
-"""Decorator de cache (memória + arquivo JSON) sobre um CotacaoProvider."""
+"""Decorator de cache (memória + arquivo JSON) sobre um CotacaoProvider.
+
+Nota: um timestamp tz-aware sobrevive ao round-trip com o mesmo instante e
+offset, mas o ``tzinfo`` reidratado é um offset fixo (ex.: -03:00), não a zona
+nomeada ``ZoneInfo('America/Sao_Paulo')``. Consumidores não devem depender de
+``timestamp.tzinfo.key``.
+"""
 
 from __future__ import annotations
 
@@ -63,5 +69,8 @@ class CacheCotacaoProvider:
                 del self._memoria[chave]  # registro corrompido: trata como miss
         cotacoes = self._inner.buscar_cotacoes(moeda, data_inicial, data_final)
         self._memoria[chave] = [c.model_dump(mode="json") for c in cotacoes]
-        self._salvar()
+        try:
+            self._salvar()
+        except OSError:
+            pass  # persistência é best-effort; o resultado já está em memória
         return cotacoes

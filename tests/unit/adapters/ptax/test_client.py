@@ -73,3 +73,11 @@ def test_value_escalar_levanta_resposta_invalida():
 
     with pytest.raises(RespostaInvalida):
         _provider(handler).buscar_cotacoes(Moeda.USD, date(2026, 6, 5), date(2026, 6, 5))
+
+
+def test_payload_nao_objeto_levanta_resposta_invalida():
+    def handler(request):
+        return httpx.Response(200, json=[1, 2, 3])
+
+    with pytest.raises(RespostaInvalida):
+        _provider(handler).buscar_cotacoes(Moeda.USD, date(2026, 6, 5), date(2026, 6, 5))

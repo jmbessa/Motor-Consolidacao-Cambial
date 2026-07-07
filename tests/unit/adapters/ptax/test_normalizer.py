@@ -73,3 +73,13 @@ def test_ptax_ordena_por_data_com_entrada_fora_de_ordem():
     )
     cotacoes = normalizar_ptax(value, Moeda.USD)
     assert [c.data_referencia for c in cotacoes] == [date(2026, 6, 5), date(2026, 6, 8)]
+
+
+def test_spread_invertido_levanta_resposta_invalida():
+    value = json.loads(
+        '[{"cotacaoCompra":5.20,"cotacaoVenda":5.10,'  # venda < compra: viola coerência
+        '"dataHoraCotacao":"2026-06-05 13:00:00.000"}]',
+        parse_float=Decimal,
+    )
+    with pytest.raises(RespostaInvalida):
+        normalizar_ptax(value, Moeda.USD)

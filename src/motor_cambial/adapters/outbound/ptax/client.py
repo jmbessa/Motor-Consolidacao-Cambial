@@ -52,6 +52,8 @@ class PtaxProvider:
                 f"&@dataFinalCotacao='{fim}'&$format=json"
             )
         payload = obter_json(self._client, url, max_retries=self._max_retries)
+        if not isinstance(payload, dict):
+            raise RespostaInvalida(f"payload PTAX não é um objeto JSON: {payload!r}")
         value = payload.get("value")
         if not isinstance(value, list):
             raise RespostaInvalida(

@@ -6,6 +6,8 @@ from datetime import datetime
 from typing import Any
 from zoneinfo import ZoneInfo
 
+from pydantic import ValidationError
+
 from motor_cambial.domain.enums import Moeda
 from motor_cambial.domain.errors import RespostaInvalida
 from motor_cambial.domain.models import CotacaoNormalizada
@@ -32,15 +34,15 @@ def normalizar_ptax(value: list[dict[str, Any]], moeda: Moeda) -> list[CotacaoNo
             )
             compra = item["cotacaoCompra"]
             venda = item["cotacaoVenda"]
-        except (KeyError, TypeError, ValueError) as exc:
-            raise RespostaInvalida(f"entrada malformada na PTAX: {item!r}") from exc
-        cotacoes.append(
-            CotacaoNormalizada.de_ptax(
-                moeda=moeda,
-                data_referencia=momento.date(),
-                taxa_compra=compra,
-                taxa_venda=venda,
-                timestamp=momento,
+            cotacoes.append(
+                CotacaoNormalizada.de_ptax(
+                    moeda=moeda,
+                    data_referencia=momento.date(),
+                    taxa_compra=compra,
+                    taxa_venda=venda,
+                    timestamp=momento,
+                )
             )
-        )
+        except (KeyError, TypeError, ValueError, ValidationError) as exc:
+            raise RespostaInvalida(f"entrada malformada na PTAX: {item!r}") from exc
     return sorted(cotacoes, key=lambda c: c.data_referencia)
