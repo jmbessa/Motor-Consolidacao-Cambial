@@ -14,6 +14,8 @@ from typing import Annotated
 
 from pydantic import BeforeValidator, Field
 
+from motor_cambial.domain.errors import ValorForaDeFaixa
+
 CENTAVOS = Decimal("0.01")
 ARREDONDAMENTO = ROUND_HALF_UP
 
@@ -49,5 +51,16 @@ DecimalPositivo = Annotated[DecimalSeguro, Field(gt=0)]
 
 
 def quantizar_brl(valor: Decimal) -> Decimal:
-    """Arredonda um valor em BRL para 2 casas com ``ROUND_HALF_UP``."""
-    return valor.quantize(CENTAVOS, rounding=ARREDONDAMENTO)
+    """Arredonda um valor em BRL para 2 casas com ROUND_HALF_UP.
+
+    Levanta ``ValorForaDeFaixa`` (erro de domínio explícito) em vez de deixar
+    propagar ``decimal.InvalidOperation`` cru quando a magnitude do valor
+    excede a precisão suportada pelo contexto Decimal.
+    """
+    try:
+        return valor.quantize(CENTAVOS, rounding=ARREDONDAMENTO)
+    except InvalidOperation as exc:
+        raise ValorForaDeFaixa(
+            f"valor não pode ser quantizado para BRL "
+            f"(magnitude excede a precisão suportada): {valor!r}"
+        ) from exc
