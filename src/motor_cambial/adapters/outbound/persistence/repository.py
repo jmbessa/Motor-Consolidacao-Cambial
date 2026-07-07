@@ -110,10 +110,10 @@ class RepositorioResultadoSQL:
         except SQLAlchemyError as exc:
             raise PersistenciaIndisponivel(f"falha ao ler histórico: {exc}") from exc
         return tuple(
-            RegistroHistorico(
-                resultado=self._desserializar(linha.payload),
-                processado_em=linha.processado_em.replace(tzinfo=timezone.utc),
-                num_processamento=linha.num_processamento,
+            self._para_registro_historico(
+                linha.payload,
+                linha.processado_em.replace(tzinfo=timezone.utc),
+                linha.num_processamento,
             )
             for linha in linhas
         )
@@ -125,4 +125,19 @@ class RepositorioResultadoSQL:
         except ValidationError as exc:
             raise RespostaInvalida(
                 f"payload de consolidação gravado é inválido: {exc}"
+            ) from exc
+
+    @staticmethod
+    def _para_registro_historico(
+        payload: object, processado_em: datetime, num_processamento: int
+    ) -> RegistroHistorico:
+        try:
+            return RegistroHistorico(
+                resultado=RepositorioResultadoSQL._desserializar(payload),
+                processado_em=processado_em,
+                num_processamento=num_processamento,
+            )
+        except ValidationError as exc:
+            raise RespostaInvalida(
+                f"registro de histórico gravado é inválido: {exc}"
             ) from exc
