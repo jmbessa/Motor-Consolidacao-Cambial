@@ -31,6 +31,22 @@ def test_normaliza_intervalo_uma_cotacao_por_data():
     ]  # ordenado por data
 
 
+def test_ordena_por_data_mesmo_com_entrada_fora_de_ordem():
+    # rates com datas fora de ordem: prova que a ordenação é feita pelo normalizer,
+    # não herdada da ordem de inserção do payload.
+    payload = json.loads(
+        '{"rates":{"2026-06-08":{"BRL":5.1432},"2026-06-01":{"BRL":5.0245},'
+        '"2026-06-05":{"BRL":5.0599}}}',
+        parse_float=Decimal,
+    )
+    cotacoes = normalizar_frankfurter(payload, Moeda.USD)
+    assert [c.data_referencia for c in cotacoes] == [
+        date(2026, 6, 1),
+        date(2026, 6, 5),
+        date(2026, 6, 8),
+    ]
+
+
 def test_cotacao_frankfurter_sem_spread_e_sem_timestamp():
     cotacoes = normalizar_frankfurter(_INTERVALO, Moeda.USD)
     c = next(c for c in cotacoes if c.data_referencia == date(2026, 6, 5))
