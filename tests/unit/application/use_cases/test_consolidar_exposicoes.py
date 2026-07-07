@@ -241,6 +241,27 @@ def test_valor_fora_de_faixa_e_tratado_como_falha_da_posicao():
     assert resultado[0].erro_ptax is not None
 
 
+def test_quantizacao_para_zero_e_tratada_como_falha_da_posicao_end_to_end():
+    # Exposição minúscula faz o PTAX quantizar para BRL 0.00 -> ValorForaDeFaixa
+    # é levantado de verdade (não injetado) dentro de converter(), e ainda assim
+    # é capturado pela tupla operacional -> PARCIAL, não derruba o lote.
+    data_referencia = date(2026, 6, 5)
+    providers = {
+        Fonte.PTAX: _ProviderFake(
+            Fonte.PTAX, [_cotacao_ptax(data_referencia, compra="1.00", venda="1.00")]
+        ),
+        Fonte.FRANKFURTER: _ProviderFake(
+            Fonte.FRANKFURTER, [_cotacao_frankfurter(data_referencia)]
+        ),
+    }
+    resultado = consolidar_exposicoes(
+        [_exposicao(valor="0.001")], providers, data_referencia
+    )
+    assert resultado[0].status is StatusPosicao.PARCIAL
+    assert resultado[0].erro_ptax is not None
+    assert resultado[0].conversao_frankfurter is not None
+
+
 def test_tiponaosuportado_propaga_e_derruba_a_consolidacao():
     # TipoNaoSuportado é sinal de bug do motor (enum novo sem regra atualizada) —
     # não deve ser engolido como falha operacional de fonte.

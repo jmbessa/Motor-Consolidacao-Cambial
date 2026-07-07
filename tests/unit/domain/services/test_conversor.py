@@ -6,7 +6,7 @@ from decimal import Decimal
 import pytest
 
 from motor_cambial.domain.enums import Fonte, Moeda, TipoExposicao, TipoTaxa
-from motor_cambial.domain.errors import SemCotacaoNaJanela
+from motor_cambial.domain.errors import SemCotacaoNaJanela, ValorForaDeFaixa
 from motor_cambial.domain.models import CotacaoNormalizada, Exposicao
 from motor_cambial.domain.services.conversor import converter
 
@@ -106,4 +106,12 @@ def test_sem_cotacao_dentro_da_janela_levanta_erro():
     exposicao = _exposicao()
     cotacoes = [_cotacao_ptax(date(2026, 5, 1))]  # muito antiga, fora da janela de 7 dias
     with pytest.raises(SemCotacaoNaJanela):
+        converter(exposicao, cotacoes, date(2026, 6, 5), janela_dias=7)
+
+
+def test_valor_brl_zero_apos_quantizacao_levanta_valor_fora_de_faixa():
+    # exposição minúscula: 0.001 * 1.00 = 0.001 -> quantiza para 0.00 (ROUND_HALF_UP)
+    exposicao = _exposicao(tipo=TipoExposicao.PAYABLE, valor="0.001")
+    cotacoes = [_cotacao_ptax(date(2026, 6, 5), compra="1.00", venda="1.00")]
+    with pytest.raises(ValorForaDeFaixa):
         converter(exposicao, cotacoes, date(2026, 6, 5), janela_dias=7)

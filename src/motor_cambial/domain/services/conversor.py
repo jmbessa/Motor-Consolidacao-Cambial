@@ -13,6 +13,7 @@ from __future__ import annotations
 from datetime import date
 
 from motor_cambial.domain.decimal_utils import quantizar_brl
+from motor_cambial.domain.errors import ValorForaDeFaixa
 from motor_cambial.domain.models import CotacaoNormalizada, Exposicao
 from motor_cambial.domain.resultado import Conversao
 from motor_cambial.domain.rules.fallback_data import resolver_data_efetiva
@@ -30,7 +31,9 @@ def converter(
     ``cotacoes`` deve conter só cotações da moeda de ``exposicao`` (o
     chamador garante isso ao buscar por ``exposicao.moeda``). Levanta
     ``SemCotacaoNaJanela`` se nenhuma data em ``cotacoes`` cair dentro da
-    janela retroativa a partir de ``data_referencia``.
+    janela retroativa a partir de ``data_referencia``. Levanta
+    ``ValorForaDeFaixa`` quando o valor convertido quantiza para zero ou
+    menos (caso degenerado mas reachable de negócio: exposição minúscula).
     """
     tipo_taxa = tipo_taxa_para(exposicao.tipo)
     por_data = {c.data_referencia: c for c in cotacoes}
@@ -42,6 +45,11 @@ def converter(
     cotacao = por_data[fallback.data_efetiva]
     taxa = cotacao.taxa_para(tipo_taxa)
     valor_brl = quantizar_brl(exposicao.valor * taxa)
+    if valor_brl <= 0:
+        raise ValorForaDeFaixa(
+            f"valor convertido para BRL não é positivo após quantização: "
+            f"{valor_brl!r} (exposição {exposicao.id!r}, taxa {taxa!r})"
+        )
     return Conversao(
         fonte=cotacao.fonte,
         moeda=exposicao.moeda,
