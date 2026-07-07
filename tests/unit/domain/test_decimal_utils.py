@@ -10,6 +10,7 @@ from motor_cambial.domain.decimal_utils import (
     DecimalSeguro,
     quantizar_brl,
 )
+from motor_cambial.domain.errors import ValorForaDeFaixa
 
 seguro = TypeAdapter(DecimalSeguro)
 positivo = TypeAdapter(DecimalPositivo)
@@ -101,3 +102,12 @@ def test_quantizar_brl_usa_half_up_e_nao_bankers():
 
 def test_quantizar_brl_nao_arredonda_quando_ja_cabe():
     assert quantizar_brl(Decimal("10.10")) == Decimal("10.10")
+
+
+def test_quantizar_brl_magnitude_impossivel_levanta_erro_de_dominio():
+    with pytest.raises(ValorForaDeFaixa):
+        quantizar_brl(Decimal("1E27"))
+
+
+def test_quantizar_brl_valor_realista_continua_funcionando():
+    assert quantizar_brl(Decimal("1234567.899")) == Decimal("1234567.90")
