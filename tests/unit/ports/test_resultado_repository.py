@@ -1,7 +1,5 @@
 """Testes estruturais do port ResultadoRepository."""
 
-from datetime import date
-
 from motor_cambial.ports.resultado_repository import ResultadoRepository
 
 
