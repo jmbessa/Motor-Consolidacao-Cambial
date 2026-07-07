@@ -16,6 +16,7 @@ serializam diferente).
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from decimal import Decimal
 
 from motor_cambial.domain.decimal_utils import quantizar_brl
@@ -30,7 +31,7 @@ from motor_cambial.domain.visao_consolidada import (
 )
 
 
-def consolidar(posicoes: list[PosicaoAvaliada]) -> VisaoConsolidada:
+def consolidar(posicoes: Iterable[PosicaoAvaliada]) -> VisaoConsolidada:
     """Agrega o lote em totais por moeda, posição líquida e top 3 divergências."""
     # posicoes pode ser um iterável de uso único (generator, filter, map);
     # materializar aqui evita esgotá-lo na primeira das duas comprehensions
