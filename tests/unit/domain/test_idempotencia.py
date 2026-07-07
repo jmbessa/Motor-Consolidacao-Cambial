@@ -80,3 +80,15 @@ def test_ids_com_caracteres_especiais_nao_colidem():
 def test_conjunto_vazio_tem_hash_estavel():
     assert hash_do_conjunto([]) == hash_do_conjunto([])
     assert len(hash_do_conjunto([])) == 64
+
+
+def test_canonico_cobre_todos_os_campos_de_identidade_de_exposicao():
+    # Guarda contra drift: se Exposicao ganhar/perder um campo, esta asserção falha,
+    # forçando uma decisão consciente — o campo novo entra na identidade do run (vai
+    # para _canonico) ou é deliberadamente excluído (como descricao)?
+    from motor_cambial.domain.models import Exposicao
+
+    campos_exposicao = set(Exposicao.model_fields)
+    campos_na_identidade = {"id", "tipo", "moeda", "valor", "vencimento"}
+    campos_excluidos = {"descricao"}
+    assert campos_exposicao == campos_na_identidade | campos_excluidos

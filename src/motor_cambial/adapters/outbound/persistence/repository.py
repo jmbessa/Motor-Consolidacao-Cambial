@@ -35,9 +35,15 @@ class RepositorioResultadoSQL:
         self._engine = engine
 
     def salvar(self, resultado: ResultadoConsolidacao) -> None:
-        payload = resultado.model_dump(mode="json")
+        """Persiste o resultado de forma idempotente (UPSERT + histórico append-only).
+
+        Assume um único escritor: escritas concorrentes para a mesma chave
+        natural estão fora de escopo (concorrência/multiusuário não é
+        requisito deste projeto).
+        """
         agora = datetime.now(timezone.utc).replace(microsecond=0)
         try:
+            payload = resultado.model_dump(mode="json")
             with self._engine.begin() as conn:
                 stmt = mysql_insert(consolidacao).values(
                     data_referencia=resultado.data_referencia,
