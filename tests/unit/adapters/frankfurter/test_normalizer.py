@@ -72,3 +72,8 @@ def test_rate_sem_brl_e_invalido():
     payload = {"rates": {"2026-06-05": {"USD": Decimal("1")}}}
     with pytest.raises(RespostaInvalida):
         normalizar_frankfurter(payload, Moeda.USD)
+
+
+def test_rates_nao_dict_levanta_resposta_invalida():
+    with pytest.raises(RespostaInvalida):
+        normalizar_frankfurter({"rates": []}, Moeda.USD)

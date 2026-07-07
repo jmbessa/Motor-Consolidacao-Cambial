@@ -4,9 +4,11 @@ from datetime import date
 from decimal import Decimal
 
 import httpx
+import pytest
 
 from motor_cambial.adapters.outbound.ptax.client import PtaxProvider
 from motor_cambial.domain.enums import Fonte, Moeda
+from motor_cambial.domain.errors import RespostaInvalida
 
 _BASE = "https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata"
 _VALUE_USD = (
@@ -63,3 +65,11 @@ def test_fim_de_semana_value_vazio_retorna_lista_vazia():
         _provider(handler).buscar_cotacoes(Moeda.USD, date(2026, 6, 6), date(2026, 6, 6))
         == []
     )
+
+
+def test_value_escalar_levanta_resposta_invalida():
+    def handler(request):
+        return httpx.Response(200, json={"value": 5})
+
+    with pytest.raises(RespostaInvalida):
+        _provider(handler).buscar_cotacoes(Moeda.USD, date(2026, 6, 5), date(2026, 6, 5))

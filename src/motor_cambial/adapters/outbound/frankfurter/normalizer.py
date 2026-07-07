@@ -23,8 +23,12 @@ def normalizar_frankfurter(payload: dict[str, Any], moeda: Moeda) -> list[Cotaca
             )
         raise RespostaInvalida(f"payload Frankfurter sem 'rates': {payload!r}")
 
+    rates = payload["rates"]
+    if not isinstance(rates, dict):
+        raise RespostaInvalida(f"payload Frankfurter com 'rates' não-dict: {rates!r}")
+
     cotacoes: list[CotacaoNormalizada] = []
-    for data_iso, valores in payload["rates"].items():
+    for data_iso, valores in rates.items():
         try:
             data_ref = date.fromisoformat(data_iso)
             taxa = valores["BRL"]

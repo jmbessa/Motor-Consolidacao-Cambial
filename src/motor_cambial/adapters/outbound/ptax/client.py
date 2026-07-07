@@ -53,6 +53,8 @@ class PtaxProvider:
             )
         payload = obter_json(self._client, url, max_retries=self._max_retries)
         value = payload.get("value")
-        if value is None:
-            raise RespostaInvalida(f"payload PTAX sem 'value': {payload!r}")
+        if not isinstance(value, list):
+            raise RespostaInvalida(
+                f"payload PTAX com 'value' ausente ou não-lista: {payload!r}"
+            )
         return normalizar_ptax(value, moeda)

@@ -63,3 +63,13 @@ def test_value_vazio_retorna_lista_vazia():
 def test_campo_faltando_levanta_resposta_invalida():
     with pytest.raises(RespostaInvalida):
         normalizar_ptax([{"cotacaoCompra": Decimal("5.1")}], Moeda.USD)
+
+
+def test_ptax_ordena_por_data_com_entrada_fora_de_ordem():
+    value = json.loads(
+        '[{"cotacaoCompra":5.20,"cotacaoVenda":5.21,"dataHoraCotacao":"2026-06-08 13:00:00.000"},'
+        '{"cotacaoCompra":5.10,"cotacaoVenda":5.11,"dataHoraCotacao":"2026-06-05 13:00:00.000"}]',
+        parse_float=Decimal,
+    )
+    cotacoes = normalizar_ptax(value, Moeda.USD)
+    assert [c.data_referencia for c in cotacoes] == [date(2026, 6, 5), date(2026, 6, 8)]

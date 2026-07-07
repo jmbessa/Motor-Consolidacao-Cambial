@@ -6,6 +6,8 @@ import json
 from datetime import date
 from pathlib import Path
 
+from pydantic import ValidationError
+
 from motor_cambial.domain.enums import Fonte, Moeda
 from motor_cambial.domain.models import CotacaoNormalizada
 from motor_cambial.ports.cotacao_provider import CotacaoProvider
@@ -30,7 +32,12 @@ class CacheCotacaoProvider:
 
     def _carregar(self) -> dict[str, list[dict]]:
         if self._arquivo.exists():
-            return json.loads(self._arquivo.read_text(encoding="utf-8"))
+            try:
+                dados = json.loads(self._arquivo.read_text(encoding="utf-8"))
+            except (json.JSONDecodeError, OSError, ValueError):
+                return {}
+            if isinstance(dados, dict):
+                return dados
         return {}
 
     def _salvar(self) -> None:
@@ -48,7 +55,12 @@ class CacheCotacaoProvider:
     ) -> list[CotacaoNormalizada]:
         chave = self._chave(moeda, data_inicial, data_final)
         if not self._modo_live and chave in self._memoria:
-            return [CotacaoNormalizada.model_validate(d) for d in self._memoria[chave]]
+            try:
+                return [
+                    CotacaoNormalizada.model_validate(d) for d in self._memoria[chave]
+                ]
+            except ValidationError:
+                del self._memoria[chave]  # registro corrompido: trata como miss
         cotacoes = self._inner.buscar_cotacoes(moeda, data_inicial, data_final)
         self._memoria[chave] = [c.model_dump(mode="json") for c in cotacoes]
         self._salvar()
