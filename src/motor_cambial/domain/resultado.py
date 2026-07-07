@@ -9,6 +9,14 @@ taxa em si — tudo que a rastreabilidade (requisito do enunciado) exige.
 exposição, junto com a divergência e os alertas — ou registra por que uma
 ou as duas fontes falharam. O ``status`` é derivado da presença das
 conversões e mantido coerente por validação (nunca setado "à mão").
+
+Cada fonte aplica seu próprio fallback de data de forma independente: PTAX
+pode resolver exatamente na ``data_referencia`` enquanto Frankfurter cai
+alguns dias antes (ou vice-versa). Quando isso acontece, a divergência
+calculada mistura duas coisas diferentes — diferença metodológica real
+entre as fontes e movimento de mercado entre dias distintos. O campo
+``datas_efetivas_divergem`` sinaliza explicitamente esse caso para quem
+consome o resultado (ex.: relatórios), sem forçar decisão de negócio aqui.
 """
 
 from __future__ import annotations
@@ -71,6 +79,7 @@ class PosicaoAvaliada(BaseModel):
     erro_frankfurter: str | None = None
     divergencia: Divergencia | None = None
     alertas: tuple[Alerta, ...] = ()
+    datas_efetivas_divergem: bool = False
 
     @model_validator(mode="after")
     def _valida_coerencia(self) -> "PosicaoAvaliada":
@@ -111,10 +120,11 @@ class PosicaoAvaliada(BaseModel):
             )
 
         if self.status is not StatusPosicao.CONSOLIDADA and (
-            self.divergencia is not None or self.alertas
+            self.divergencia is not None or self.alertas or self.datas_efetivas_divergem
         ):
             raise ValueError(
-                "divergencia e alertas só podem existir quando status é CONSOLIDADA"
+                "divergencia, alertas e datas_efetivas_divergem só podem existir "
+                "quando status é CONSOLIDADA"
             )
         if self.status is StatusPosicao.CONSOLIDADA and self.divergencia is None:
             raise ValueError(

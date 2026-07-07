@@ -124,6 +124,44 @@ def test_posicao_consolidada_exige_divergencia_presente():
         )
 
 
+def test_posicao_datas_efetivas_divergem_default_false():
+    posicao = PosicaoAvaliada(
+        exposicao=_exposicao(),
+        status=StatusPosicao.CONSOLIDADA,
+        conversao_ptax=_conversao(fonte=Fonte.PTAX),
+        conversao_frankfurter=_conversao(
+            fonte=Fonte.FRANKFURTER, tipo_taxa=TipoTaxa.REFERENCIA
+        ),
+        divergencia=Divergencia(percentual=Decimal("0"), absoluta_brl=Decimal("0")),
+    )
+    assert posicao.datas_efetivas_divergem is False
+
+
+def test_posicao_aceita_datas_efetivas_divergem_true_quando_consolidada():
+    posicao = PosicaoAvaliada(
+        exposicao=_exposicao(),
+        status=StatusPosicao.CONSOLIDADA,
+        conversao_ptax=_conversao(fonte=Fonte.PTAX),
+        conversao_frankfurter=_conversao(
+            fonte=Fonte.FRANKFURTER, tipo_taxa=TipoTaxa.REFERENCIA
+        ),
+        divergencia=Divergencia(percentual=Decimal("0"), absoluta_brl=Decimal("0")),
+        datas_efetivas_divergem=True,
+    )
+    assert posicao.datas_efetivas_divergem is True
+
+
+def test_posicao_rejeita_datas_efetivas_divergem_true_fora_de_consolidada():
+    with pytest.raises(ValidationError):
+        PosicaoAvaliada(
+            exposicao=_exposicao(),
+            status=StatusPosicao.FALHA,
+            erro_ptax="fonte fora do ar",
+            erro_frankfurter="moeda não suportada",
+            datas_efetivas_divergem=True,
+        )
+
+
 def test_posicao_parcial_exige_erro_da_fonte_faltando():
     posicao = PosicaoAvaliada(
         exposicao=_exposicao(),

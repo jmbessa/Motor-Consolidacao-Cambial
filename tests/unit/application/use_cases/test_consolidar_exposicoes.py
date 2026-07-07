@@ -264,6 +264,33 @@ def test_quantizacao_para_zero_e_tratada_como_falha_da_posicao_end_to_end():
     assert resultado[0].conversao_frankfurter is not None
 
 
+def test_datas_efetivas_divergem_quando_fontes_caem_em_datas_diferentes():
+    # PTAX tem cotação exata na data_referencia; Frankfurter só tem uma cotação
+    # de 2 dias antes (cai em fallback) -> datas_efetivas_divergem deve ser True.
+    data_referencia = date(2026, 6, 7)
+    providers = {
+        Fonte.PTAX: _ProviderFake(Fonte.PTAX, [_cotacao_ptax(data_referencia)]),
+        Fonte.FRANKFURTER: _ProviderFake(
+            Fonte.FRANKFURTER, [_cotacao_frankfurter(date(2026, 6, 5))]
+        ),
+    }
+    resultado = consolidar_exposicoes([_exposicao()], providers, data_referencia)
+    assert resultado[0].status is StatusPosicao.CONSOLIDADA
+    assert resultado[0].datas_efetivas_divergem is True
+
+
+def test_datas_efetivas_nao_divergem_quando_ambas_fontes_na_mesma_data():
+    data_referencia = date(2026, 6, 5)
+    providers = {
+        Fonte.PTAX: _ProviderFake(Fonte.PTAX, [_cotacao_ptax(data_referencia)]),
+        Fonte.FRANKFURTER: _ProviderFake(
+            Fonte.FRANKFURTER, [_cotacao_frankfurter(data_referencia)]
+        ),
+    }
+    resultado = consolidar_exposicoes([_exposicao()], providers, data_referencia)
+    assert resultado[0].datas_efetivas_divergem is False
+
+
 def test_tiponaosuportado_propaga_e_derruba_a_consolidacao():
     # TipoNaoSuportado é sinal de bug do motor (enum novo sem regra atualizada) —
     # não deve ser engolido como falha operacional de fonte.

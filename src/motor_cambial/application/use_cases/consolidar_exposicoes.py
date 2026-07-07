@@ -8,6 +8,12 @@ fonte fora do ar, resposta malformada, valor fora de faixa) não derrubam o
 lote — a posição fica PARCIAL/FALHA com o motivo registrado.
 ``TipoNaoSuportado`` e qualquer erro fora dessa tupla são bugs do motor e
 propagam (ver ``_ERROS_OPERACIONAIS``).
+
+Quando as duas fontes convertem, também comparamos a ``data_efetiva`` de
+cada uma: cada fonte aplica seu próprio fallback de data de forma
+independente, então PTAX e Frankfurter podem acabar resolvendo em datas
+diferentes para a mesma posição. Isso é sinalizado em
+``PosicaoAvaliada.datas_efetivas_divergem``.
 """
 
 from __future__ import annotations
@@ -82,10 +88,14 @@ def _avaliar_posicao(
             divergencia.absoluta_brl,
             config_alerta,
         )
+        datas_efetivas_divergem = (
+            conversao_ptax.data_efetiva != conversao_frankfurter.data_efetiva
+        )
         status = StatusPosicao.CONSOLIDADA
     else:
         divergencia = None
         alertas = ()
+        datas_efetivas_divergem = False
         n_conversoes = int(conversao_ptax is not None) + int(
             conversao_frankfurter is not None
         )
@@ -100,6 +110,7 @@ def _avaliar_posicao(
         erro_frankfurter=erro_frankfurter,
         divergencia=divergencia,
         alertas=alertas,
+        datas_efetivas_divergem=datas_efetivas_divergem,
     )
 
 
