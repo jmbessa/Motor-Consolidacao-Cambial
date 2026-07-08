@@ -6,15 +6,31 @@ o composition root e os use cases. Mantém a regra adapters → application → 
 
 from __future__ import annotations
 
+from datetime import date
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, Response
 
+from motor_cambial.adapters.inbound.api.models import ConsolidarRequest
+from motor_cambial.application.use_cases.reprocessar_por_data import (
+    reprocessar_por_data,
+)
+from motor_cambial.composition_root import construir_providers, construir_repository
 from motor_cambial.config import Config
+from motor_cambial.domain.errors import (
+    DomainError,
+    PersistenciaIndisponivel,
+    RespostaInvalida,
+)
+from motor_cambial.domain.rules.alertas import ConfiguracaoAlerta
 
 
 def criar_app(config: Config | None = None) -> FastAPI:
     """Factory da app FastAPI (injeta Config para testabilidade)."""
     config = config or Config()
+    repositorio = construir_repository(config)
+
     app = FastAPI(title="Motor de Consolidação Cambial", version="0.1.0")
     app.add_middleware(
         CORSMiddleware,
@@ -23,9 +39,48 @@ def criar_app(config: Config | None = None) -> FastAPI:
         allow_headers=["*"],
     )
 
+    @app.exception_handler(PersistenciaIndisponivel)
+    def _persistencia(_request, exc: PersistenciaIndisponivel) -> JSONResponse:
+        return JSONResponse(status_code=503, content={"erro": str(exc)})
+
+    @app.exception_handler(RespostaInvalida)
+    def _resposta_invalida(_request, exc: RespostaInvalida) -> JSONResponse:
+        return JSONResponse(status_code=422, content={"erro": str(exc)})
+
+    @app.exception_handler(DomainError)
+    def _domain(_request, exc: DomainError) -> JSONResponse:
+        return JSONResponse(status_code=500, content={"erro": str(exc)})
+
     @app.get("/health")
     def health() -> dict[str, str]:
         return {"status": "ok"}
+
+    @app.post("/consolidacoes")
+    def consolidar_endpoint(req: ConsolidarRequest) -> Response:
+        cfg = (
+            config
+            if req.modo_live is None
+            else config.model_copy(update={"modo_live": req.modo_live})
+        )
+        providers = construir_providers(cfg)
+        overrides: dict = {}
+        if req.limite_percentual is not None:
+            overrides["limite_percentual"] = req.limite_percentual
+        if req.limite_absoluto is not None:
+            overrides["limite_absoluto_brl"] = req.limite_absoluto
+        config_alerta = ConfiguracaoAlerta(**overrides)
+        data_ref = req.data_referencia or date.today()
+        janela = (
+            req.janela_dias
+            if req.janela_dias is not None
+            else cfg.janela_fallback_dias
+        )
+        resultado = reprocessar_por_data(
+            req.exposicoes, providers, data_ref, repositorio, config_alerta, janela
+        )
+        return Response(
+            content=resultado.model_dump_json(), media_type="application/json"
+        )
 
     return app
 
