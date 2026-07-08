@@ -1,5 +1,5 @@
-# Infra de dados do Motor de Consolidação Cambial.
-# Fatia 6b: apenas o container MySQL. Backend/frontend chegam na Fatia 8.
+# Infra do Motor de Consolidação Cambial.
+# db + backend (Fatia 8b-i). O frontend (nginx) chega na Fatia 8b-ii.
 services:
   db:
     image: mysql:8.0
@@ -30,9 +30,12 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    restart: on-failure
     environment:
       MOTOR_DB_HOST: db
+      MOTOR_DB_USER: ${MYSQL_USER:-motor}
       MOTOR_DB_PASSWORD: ${MYSQL_PASSWORD:-motor}
+      MOTOR_DB_NAME: ${MYSQL_DATABASE:-motor_cambial}
       MOTOR_MODO_LIVE: ${MOTOR_MODO_LIVE:-false}
     ports:
       - "8000:8000"
