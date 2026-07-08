@@ -8,9 +8,10 @@ from __future__ import annotations
 
 from datetime import date
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
+from pydantic import TypeAdapter
 
 from motor_cambial.adapters.inbound.api.models import ConsolidarRequest
 from motor_cambial.application.use_cases.reprocessar_por_data import (
@@ -23,7 +24,10 @@ from motor_cambial.domain.errors import (
     PersistenciaIndisponivel,
     RespostaInvalida,
 )
+from motor_cambial.domain.resultado_consolidacao import RegistroHistorico
 from motor_cambial.domain.rules.alertas import ConfiguracaoAlerta
+
+_HISTORICO_ADAPTER = TypeAdapter(tuple[RegistroHistorico, ...])
 
 
 def criar_app(config: Config | None = None) -> FastAPI:
@@ -80,6 +84,23 @@ def criar_app(config: Config | None = None) -> FastAPI:
         )
         return Response(
             content=resultado.model_dump_json(), media_type="application/json"
+        )
+
+    @app.get("/consolidacoes/{data_referencia}/{hash_conjunto}")
+    def buscar_endpoint(data_referencia: date, hash_conjunto: str) -> Response:
+        resultado = repositorio.buscar(data_referencia, hash_conjunto)
+        if resultado is None:
+            raise HTTPException(status_code=404, detail="consolidação não encontrada")
+        return Response(
+            content=resultado.model_dump_json(), media_type="application/json"
+        )
+
+    @app.get("/consolidacoes/{data_referencia}/{hash_conjunto}/historico")
+    def historico_endpoint(data_referencia: date, hash_conjunto: str) -> Response:
+        registros = repositorio.buscar_historico(data_referencia, hash_conjunto)
+        return Response(
+            content=_HISTORICO_ADAPTER.dump_json(tuple(registros)),
+            media_type="application/json",
         )
 
     return app
