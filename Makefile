@@ -13,7 +13,7 @@ VENV_PY := .venv/bin/python
 endif
 
 .DEFAULT_GOAL := help
-.PHONY: help install test test-integration run run-live api up down logs migrate seed clean
+.PHONY: help install test test-integration run run-live api up down logs migrate seed clean compose-up
 
 help: ## Lista os alvos disponíveis
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -64,6 +64,9 @@ run-live: migrate ## Como `run`, mas consulta PTAX e Frankfurter ao vivo (ignora
 
 api: migrate ## Sobe o MySQL, aplica o schema e serve a API (uvicorn do venv)
 	$(HOST_DB) $(VENV_PY) -m uvicorn motor_cambial.adapters.inbound.api.app:app --port 8000
+
+compose-up: ## Sobe MySQL + backend em containers (docker compose up --build --wait)
+	$(COMPOSE) up -d --build --wait
 
 clean: ## Derruba o container COM o volume e limpa caches locais
 	$(COMPOSE) down -v
