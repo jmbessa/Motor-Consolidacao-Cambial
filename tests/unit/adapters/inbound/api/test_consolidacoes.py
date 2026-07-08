@@ -140,3 +140,25 @@ def test_post_persistencia_indisponivel_vira_503(monkeypatch):
     client, _ = _client(monkeypatch, repo=_RepoQuebrado())
     r = client.post("/consolidacoes", json=_BODY)
     assert r.status_code == 503
+
+
+def test_post_modo_live_no_corpo_chega_aos_providers(monkeypatch):
+    # Exercita o branch config.model_copy(update={"modo_live": ...}) do handler:
+    # modo_live informado no corpo deve chegar ao Config passado a construir_providers.
+    capturado = {}
+
+    def _fake_providers(config):
+        capturado["modo_live"] = config.modo_live
+        return _providers_ok(date(2026, 6, 5))
+
+    monkeypatch.setattr(
+        "motor_cambial.adapters.inbound.api.app.construir_repository",
+        lambda config: _RepoFake(),
+    )
+    monkeypatch.setattr(
+        "motor_cambial.adapters.inbound.api.app.construir_providers", _fake_providers
+    )
+    client = TestClient(criar_app())
+    r = client.post("/consolidacoes", json={**_BODY, "modo_live": True})
+    assert r.status_code == 200, r.text
+    assert capturado["modo_live"] is True
