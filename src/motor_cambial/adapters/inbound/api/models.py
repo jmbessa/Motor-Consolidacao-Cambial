@@ -20,4 +20,4 @@ class ConsolidarRequest(BaseModel):
     modo_live: bool | None = None
     limite_percentual: DecimalPositivo | None = None
     limite_absoluto: DecimalPositivo | None = None
-    janela_dias: int | None = Field(default=None, ge=0)
+    janela_dias: int | None = Field(default=None, ge=0, le=3650)

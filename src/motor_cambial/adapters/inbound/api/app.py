@@ -6,7 +6,9 @@ o composition root e os use cases. Mantém a regra adapters → application → 
 
 from __future__ import annotations
 
+import logging
 from datetime import date
+from decimal import Decimal
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -26,6 +28,8 @@ from motor_cambial.domain.errors import (
 )
 from motor_cambial.domain.resultado_consolidacao import RegistroHistorico
 from motor_cambial.domain.rules.alertas import ConfiguracaoAlerta
+
+logger = logging.getLogger(__name__)
 
 _HISTORICO_ADAPTER = TypeAdapter(tuple[RegistroHistorico, ...])
 
@@ -53,6 +57,9 @@ def criar_app(config: Config | None = None) -> FastAPI:
 
     @app.exception_handler(DomainError)
     def _domain(_request, exc: DomainError) -> JSONResponse:
+        # DomainError sem handler específico = bug do motor (ex.: TipoNaoSuportado):
+        # loga o traceback para não virar um 500 silencioso (observabilidade).
+        logger.error("erro de domínio não tratado no endpoint: %s", exc, exc_info=exc)
         return JSONResponse(status_code=500, content={"erro": str(exc)})
 
     @app.get("/health")
@@ -67,7 +74,7 @@ def criar_app(config: Config | None = None) -> FastAPI:
             else config.model_copy(update={"modo_live": req.modo_live})
         )
         providers = construir_providers(cfg)
-        overrides: dict = {}
+        overrides: dict[str, Decimal] = {}
         if req.limite_percentual is not None:
             overrides["limite_percentual"] = req.limite_percentual
         if req.limite_absoluto is not None:

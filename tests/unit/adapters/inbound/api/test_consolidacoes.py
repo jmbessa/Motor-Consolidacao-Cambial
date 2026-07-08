@@ -162,3 +162,26 @@ def test_post_modo_live_no_corpo_chega_aos_providers(monkeypatch):
     r = client.post("/consolidacoes", json={**_BODY, "modo_live": True})
     assert r.status_code == 200, r.text
     assert capturado["modo_live"] is True
+
+
+def test_post_erro_inesperado_do_motor_vira_500(monkeypatch):
+    # DomainError sem handler específico (bug do motor) cai no handler base -> 500.
+    from motor_cambial.domain.errors import TipoNaoSuportado
+
+    def _fake_reprocessar(*args, **kwargs):
+        raise TipoNaoSuportado("tipo não tratado")
+
+    monkeypatch.setattr(
+        "motor_cambial.adapters.inbound.api.app.reprocessar_por_data",
+        _fake_reprocessar,
+    )
+    client, _ = _client(monkeypatch)
+    r = client.post("/consolidacoes", json=_BODY)
+    assert r.status_code == 500
+
+
+def test_post_janela_dias_absurda_vira_422(monkeypatch):
+    # janela_dias com teto (le=3650) evita OverflowError -> 500 com input patológico.
+    client, _ = _client(monkeypatch)
+    r = client.post("/consolidacoes", json={**_BODY, "janela_dias": 999999})
+    assert r.status_code == 422
