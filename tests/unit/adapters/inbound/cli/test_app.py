@@ -198,3 +198,83 @@ def test_saida_default_usa_convencao_data_output(tmp_path, monkeypatch):
     assert resultado.exit_code == 0, resultado.output
     esperado = tmp_path / "data" / "output" / "consolidacao_2026-06-05.json"
     assert esperado.exists()
+
+
+def test_data_invalida_e_rejeitada_pelo_parser(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        "motor_cambial.adapters.inbound.cli.app.construir_providers", lambda config: {}
+    )
+    monkeypatch.setattr(
+        "motor_cambial.adapters.inbound.cli.app.construir_repository",
+        lambda config: _RepoFake(),
+    )
+    resultado = runner.invoke(
+        app,
+        ["--arquivo", str(_arquivo_exposicoes(tmp_path)), "--data", "05/06/2026"],
+    )
+    assert resultado.exit_code == 2
+    assert "data inválida" in resultado.output.lower()
+
+
+def test_limite_percentual_invalido_e_rejeitado_pelo_parser(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        "motor_cambial.adapters.inbound.cli.app.construir_providers", lambda config: {}
+    )
+    monkeypatch.setattr(
+        "motor_cambial.adapters.inbound.cli.app.construir_repository",
+        lambda config: _RepoFake(),
+    )
+    resultado = runner.invoke(
+        app,
+        [
+            "--arquivo", str(_arquivo_exposicoes(tmp_path)),
+            "--data", "2026-06-05",
+            "--limite-percentual", "-1",
+        ],
+    )
+    assert resultado.exit_code == 2
+    assert "positivo" in resultado.output.lower()
+
+
+def test_janela_dias_negativa_e_rejeitada_pelo_parser(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        "motor_cambial.adapters.inbound.cli.app.construir_providers", lambda config: {}
+    )
+    monkeypatch.setattr(
+        "motor_cambial.adapters.inbound.cli.app.construir_repository",
+        lambda config: _RepoFake(),
+    )
+    resultado = runner.invoke(
+        app,
+        [
+            "--arquivo", str(_arquivo_exposicoes(tmp_path)),
+            "--data", "2026-06-05",
+            "--janela-dias", "-1",
+        ],
+    )
+    assert resultado.exit_code == 2
+
+
+def test_falha_ao_exportar_json_informa_que_pipeline_ja_persistiu(tmp_path, monkeypatch):
+    data_ref = date(2026, 6, 5)
+    repo = _RepoFake()
+    monkeypatch.setattr(
+        "motor_cambial.adapters.inbound.cli.app.construir_providers",
+        lambda config: _providers_ok(data_ref),
+    )
+    monkeypatch.setattr(
+        "motor_cambial.adapters.inbound.cli.app.construir_repository",
+        lambda config: repo,
+    )
+    # --saida aponta para um diretório existente (sem nome de arquivo) -> write_text falha.
+    resultado = runner.invoke(
+        app,
+        [
+            "--arquivo", str(_arquivo_exposicoes(tmp_path)),
+            "--data", "2026-06-05",
+            "--saida", str(tmp_path),
+        ],
+    )
+    assert resultado.exit_code == 1
+    assert "persistida" in resultado.output.lower()
+    assert len(repo.salvos) == 1  # o pipeline realmente já salvou antes de falhar a exportação

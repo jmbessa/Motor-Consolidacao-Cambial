@@ -81,3 +81,16 @@ def test_valor_string_preserva_precisao(tmp_path):
     )
     exposicoes = carregar_exposicoes(arquivo)
     assert exposicoes[0].valor == Decimal("98000.50")
+
+
+def test_id_duplicado_levanta_resposta_invalida(tmp_path):
+    arquivo = tmp_path / "exposicoes.json"
+    arquivo.write_text(
+        '[{"id": "1", "tipo": "payable", "moeda": "USD", "valor": "1000", '
+        '"vencimento": "2026-06-05"}, '
+        '{"id": "1", "tipo": "receivable", "moeda": "EUR", "valor": "2000", '
+        '"vencimento": "2026-06-08"}]',
+        encoding="utf-8",
+    )
+    with pytest.raises(RespostaInvalida, match="duplicado"):
+        carregar_exposicoes(arquivo)

@@ -42,11 +42,18 @@ def carregar_exposicoes(caminho: Path) -> list[Exposicao]:
         )
 
     exposicoes: list[Exposicao] = []
+    ids_vistos: set[str] = set()
     for indice, item in enumerate(dados):
         try:
-            exposicoes.append(Exposicao.model_validate(item))
+            exposicao = Exposicao.model_validate(item)
         except ValidationError as exc:
             raise RespostaInvalida(
                 f"exposição inválida no índice {indice} de {caminho!s}: {exc}"
             ) from exc
+        if exposicao.id in ids_vistos:
+            raise RespostaInvalida(
+                f"id duplicado {exposicao.id!r} no índice {indice} de {caminho!s}"
+            )
+        ids_vistos.add(exposicao.id)
+        exposicoes.append(exposicao)
     return exposicoes
