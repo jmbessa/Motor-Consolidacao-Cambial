@@ -25,9 +25,9 @@ adversarial**. Ver `CLAUDE.md` e o skill de projeto.
 | `superpowers:receiving-code-review` | 3 — Revisão | Incorporar feedback com rigor técnico (verificar, não concordar por reflexo) |
 | `superpowers:verification-before-completion` | 3 — Revisão | Exigir evidência (testes rodando) antes de declarar "pronto" |
 | `superpowers:systematic-debugging` | qualquer | Depurar falhas de forma sistemática |
-| `frontend-design` | fatia de front | Design intencional do dashboard (evitar template genérico) |
-| `dataviz` | fatia de front | Gráficos de divergência PTAX×Frankfurter, top 3, posição líquida |
-| `context7` (MCP) | qualquer | Docs atualizadas de pydantic, FastAPI, SQLAlchemy, Docker, httpx |
+| `frontend-design` | Fatia 8 — **não acionada** | Design intencional do dashboard (front-end é diferencial não implementado) |
+| `dataviz` | Fatia 8 — **não acionada** | Gráficos de divergência PTAX×Frankfurter, top 3, posição líquida (idem) |
+| `context7` (MCP) | qualquer | Docs atualizadas de pydantic, SQLAlchemy, PyMySQL, httpx, typer, Docker |
 
 ## Agentes usados
 
@@ -42,8 +42,32 @@ Os demais usados são agentes **built-in** do Claude Code.
 
 ## Registro por fatia
 
-Conforme cada fatia avança, registramos aqui quais skills/agentes foram de fato
-acionados (para a apresentação ser específica).
+Registro de quais skills/agentes foram de fato acionados em cada fatia (para a
+apresentação ser específica). O padrão base — `brainstorming` (decisões) →
+`writing-plans` + agente `Plan` (plano) → `test-driven-development` (impl.) →
+agente `lv10-dev` (revisão adversarial) — se repete; abaixo, os destaques por fatia.
 
-- **Fatia 1 — Modelagem do domínio:** `writing-plans` + agente `Plan` (plano);
-  `test-driven-development` (implementação); agente `lv10-dev` (revisão).
+- **Fatia 1 — Modelagem do domínio:** `writing-plans` + agente `Plan`;
+  `test-driven-development`; agente `lv10-dev`.
+- **Fatia 2 — Regras de negócio (seleção de taxa, fallback, alertas):** `brainstorming`
+  (justificativas compra/venda, semântica dos alertas); `writing-plans`;
+  `test-driven-development`; `lv10-dev`.
+- **Fatia 3 — Adapters das APIs (PTAX + Frankfurter):** `brainstorming`; `writing-plans`;
+  `test-driven-development` (normalização, timeout/retry, respostas incompletas);
+  `context7` (httpx); `lv10-dev`.
+- **Fatia 4 — Use case de consolidação (conversão, divergência, rastreabilidade):**
+  `brainstorming`; `writing-plans`; `test-driven-development`; `lv10-dev`.
+- **Fatia 5 — Serviço de consolidação (totais, top 3, posição por natureza):**
+  `brainstorming`; `writing-plans`; `test-driven-development`; `lv10-dev`.
+- **Fatia 6a — Persistência + idempotência (MySQL, hash do conjunto, histórico):**
+  `brainstorming` (tradeoffs de schema e auditoria append-only); `writing-plans`;
+  `test-driven-development`; `context7` (SQLAlchemy); `lv10-dev`.
+- **Fatia 6b — Infra Docker + MySQL (compose, Makefile):** `brainstorming`;
+  `writing-plans`; validação ao vivo (containers reais); `context7` (Docker); `lv10-dev`.
+- **Fatia 7 — CLI + relatório:** `brainstorming`; `writing-plans`;
+  `subagent-driven-development` (implementer + reviewer por tarefa); `test-driven-development`;
+  validação ao vivo (APIs + MySQL reais); `lv10-dev` + `requesting-code-review` (revisão final).
+- **Fatia 8 — API REST + front-end:** **não implementada** (diferencial; ver `README.md`).
+- **Fatia 9 — Documentação (README, exemplo de output, decisões):** `brainstorming`;
+  `writing-plans` (spec); investigação por subagentes (auditoria de cobertura do enunciado);
+  validação ao vivo do README (< 5 min); `lv10-dev`.
