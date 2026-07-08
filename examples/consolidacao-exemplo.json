@@ -1,0 +1,284 @@
+{
+  "data_referencia": "2026-07-05",
+  "hash_conjunto": "8bf7b6f38971ee1bcca9645d48b426db052f28ff276c6d4508f5b66c36242819",
+  "posicoes": [
+    {
+      "exposicao": {
+        "id": "1",
+        "tipo": "payable",
+        "moeda": "USD",
+        "valor": "125000",
+        "vencimento": "2026-06-05",
+        "descricao": "AWS invoice"
+      },
+      "status": "consolidada",
+      "conversao_ptax": {
+        "fonte": "ptax",
+        "moeda": "USD",
+        "valor_origem": "125000",
+        "data_solicitada": "2026-07-05",
+        "data_efetiva": "2026-07-03",
+        "houve_fallback": true,
+        "defasagem_dias": 2,
+        "tipo_taxa": "venda",
+        "taxa_aplicada": "5.17170",
+        "valor_brl": "646462.50"
+      },
+      "conversao_frankfurter": {
+        "fonte": "frankfurter",
+        "moeda": "USD",
+        "valor_origem": "125000",
+        "data_solicitada": "2026-07-05",
+        "data_efetiva": "2026-07-03",
+        "houve_fallback": true,
+        "defasagem_dias": 2,
+        "tipo_taxa": "venda",
+        "taxa_aplicada": "5.1962",
+        "valor_brl": "649525.00"
+      },
+      "erro_ptax": null,
+      "erro_frankfurter": null,
+      "divergencia": {
+        "percentual": "0.4737320416884196685809308351",
+        "absoluta_brl": "3062.50"
+      },
+      "alertas": [],
+      "datas_efetivas_divergem": false
+    },
+    {
+      "exposicao": {
+        "id": "2",
+        "tipo": "receivable",
+        "moeda": "EUR",
+        "valor": "98000",
+        "vencimento": "2026-06-08",
+        "descricao": "Marketplace settlement"
+      },
+      "status": "consolidada",
+      "conversao_ptax": {
+        "fonte": "ptax",
+        "moeda": "EUR",
+        "valor_origem": "98000",
+        "data_solicitada": "2026-07-05",
+        "data_efetiva": "2026-07-03",
+        "houve_fallback": true,
+        "defasagem_dias": 2,
+        "tipo_taxa": "compra",
+        "taxa_aplicada": "5.91370",
+        "valor_brl": "579542.60"
+      },
+      "conversao_frankfurter": {
+        "fonte": "frankfurter",
+        "moeda": "EUR",
+        "valor_origem": "98000",
+        "data_solicitada": "2026-07-05",
+        "data_efetiva": "2026-07-03",
+        "houve_fallback": true,
+        "defasagem_dias": 2,
+        "tipo_taxa": "compra",
+        "taxa_aplicada": "5.9486",
+        "valor_brl": "582962.80"
+      },
+      "erro_ptax": null,
+      "erro_frankfurter": null,
+      "divergencia": {
+        "percentual": "0.5901550636657253496119180885",
+        "absoluta_brl": "3420.20"
+      },
+      "alertas": [],
+      "datas_efetivas_divergem": false
+    },
+    {
+      "exposicao": {
+        "id": "3",
+        "tipo": "payable",
+        "moeda": "GBP",
+        "valor": "45000",
+        "vencimento": "2026-06-12",
+        "descricao": "Vendor payment"
+      },
+      "status": "consolidada",
+      "conversao_ptax": {
+        "fonte": "ptax",
+        "moeda": "GBP",
+        "valor_origem": "45000",
+        "data_solicitada": "2026-07-05",
+        "data_efetiva": "2026-07-03",
+        "houve_fallback": true,
+        "defasagem_dias": 2,
+        "tipo_taxa": "venda",
+        "taxa_aplicada": "6.90840",
+        "valor_brl": "310878.00"
+      },
+      "conversao_frankfurter": {
+        "fonte": "frankfurter",
+        "moeda": "GBP",
+        "valor_origem": "45000",
+        "data_solicitada": "2026-07-05",
+        "data_efetiva": "2026-07-03",
+        "houve_fallback": true,
+        "defasagem_dias": 2,
+        "tipo_taxa": "venda",
+        "taxa_aplicada": "6.9396",
+        "valor_brl": "312282.00"
+      },
+      "erro_ptax": null,
+      "erro_frankfurter": null,
+      "divergencia": {
+        "percentual": "0.4516241097793989925308320306",
+        "absoluta_brl": "1404.00"
+      },
+      "alertas": [],
+      "datas_efetivas_divergem": false
+    },
+    {
+      "exposicao": {
+        "id": "4",
+        "tipo": "intercompany",
+        "moeda": "USD",
+        "valor": "300000",
+        "vencimento": "2026-06-15",
+        "descricao": "Intercompany funding"
+      },
+      "status": "consolidada",
+      "conversao_ptax": {
+        "fonte": "ptax",
+        "moeda": "USD",
+        "valor_origem": "300000",
+        "data_solicitada": "2026-07-05",
+        "data_efetiva": "2026-07-03",
+        "houve_fallback": true,
+        "defasagem_dias": 2,
+        "tipo_taxa": "referencia",
+        "taxa_aplicada": "5.17140",
+        "valor_brl": "1551420.00"
+      },
+      "conversao_frankfurter": {
+        "fonte": "frankfurter",
+        "moeda": "USD",
+        "valor_origem": "300000",
+        "data_solicitada": "2026-07-05",
+        "data_efetiva": "2026-07-03",
+        "houve_fallback": true,
+        "defasagem_dias": 2,
+        "tipo_taxa": "referencia",
+        "taxa_aplicada": "5.1962",
+        "valor_brl": "1558860.00"
+      },
+      "erro_ptax": null,
+      "erro_frankfurter": null,
+      "divergencia": {
+        "percentual": "0.4795606605561356692578412035",
+        "absoluta_brl": "7440.00"
+      },
+      "alertas": [],
+      "datas_efetivas_divergem": false
+    },
+    {
+      "exposicao": {
+        "id": "5",
+        "tipo": "receivable",
+        "moeda": "CAD",
+        "valor": "22000",
+        "vencimento": "2026-06-20",
+        "descricao": "Cross-border receivable"
+      },
+      "status": "consolidada",
+      "conversao_ptax": {
+        "fonte": "ptax",
+        "moeda": "CAD",
+        "valor_origem": "22000",
+        "data_solicitada": "2026-07-05",
+        "data_efetiva": "2026-07-03",
+        "houve_fallback": true,
+        "defasagem_dias": 2,
+        "tipo_taxa": "compra",
+        "taxa_aplicada": "3.64090",
+        "valor_brl": "80099.80"
+      },
+      "conversao_frankfurter": {
+        "fonte": "frankfurter",
+        "moeda": "CAD",
+        "valor_origem": "22000",
+        "data_solicitada": "2026-07-05",
+        "data_efetiva": "2026-07-03",
+        "houve_fallback": true,
+        "defasagem_dias": 2,
+        "tipo_taxa": "compra",
+        "taxa_aplicada": "3.6589",
+        "valor_brl": "80495.80"
+      },
+      "erro_ptax": null,
+      "erro_frankfurter": null,
+      "divergencia": {
+        "percentual": "0.4943832568870334258013128622",
+        "absoluta_brl": "396.00"
+      },
+      "alertas": [],
+      "datas_efetivas_divergem": false
+    }
+  ],
+  "visao": {
+    "totais_por_moeda": [
+      {
+        "moeda": "USD",
+        "total_brl_ptax": "2197882.50",
+        "total_brl_frankfurter": "2208385.00",
+        "quantidade_posicoes": 2
+      },
+      {
+        "moeda": "EUR",
+        "total_brl_ptax": "579542.60",
+        "total_brl_frankfurter": "582962.80",
+        "quantidade_posicoes": 1
+      },
+      {
+        "moeda": "GBP",
+        "total_brl_ptax": "310878.00",
+        "total_brl_frankfurter": "312282.00",
+        "quantidade_posicoes": 1
+      },
+      {
+        "moeda": "CAD",
+        "total_brl_ptax": "80099.80",
+        "total_brl_frankfurter": "80495.80",
+        "quantidade_posicoes": 1
+      }
+    ],
+    "posicao_liquida_por_natureza": [
+      {
+        "tipo": "payable",
+        "total_brl": "957340.50",
+        "quantidade_posicoes": 2
+      },
+      {
+        "tipo": "receivable",
+        "total_brl": "659642.40",
+        "quantidade_posicoes": 2
+      },
+      {
+        "tipo": "intercompany",
+        "total_brl": "1551420.00",
+        "quantidade_posicoes": 1
+      }
+    ],
+    "top_divergencias": [
+      {
+        "exposicao_id": "4",
+        "divergencia_absoluta_brl": "7440.00",
+        "divergencia_percentual": "0.4795606605561356692578412035"
+      },
+      {
+        "exposicao_id": "2",
+        "divergencia_absoluta_brl": "3420.20",
+        "divergencia_percentual": "0.5901550636657253496119180885"
+      },
+      {
+        "exposicao_id": "1",
+        "divergencia_absoluta_brl": "3062.50",
+        "divergencia_percentual": "0.4737320416884196685809308351"
+      }
+    ],
+    "posicoes_nao_avaliadas": []
+  }
+}

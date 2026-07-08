@@ -55,13 +55,13 @@ Toda funcionalidade do projeto passa **obrigatoriamente** por três fases, nesta
 ## Stack e arquitetura (decidido)
 
 - **Linguagem:** Python 3.12+ (`Decimal` para dinheiro — nunca `float`).
-- **Bibliotecas:** `pydantic` (modelagem/normalização), `httpx` (HTTP com timeout), `pytest` (TDD), `typer`/`argparse` (CLI), `FastAPI` + `uvicorn` (API que serve o front).
-- **Entrega:** CLI + relatório · API REST · front-end web (consome a API REST).
+- **Bibliotecas (em uso):** `pydantic`/`pydantic-settings` (modelagem/normalização/config), `httpx` (HTTP com timeout), `SQLAlchemy` + `PyMySQL` (persistência), `typer` (CLI), `pytest` (TDD). `FastAPI` + `uvicorn` seriam a base da API REST — diferencial não implementado.
+- **Entrega (estado atual):** CLI + relatório de console + JSON exportado + persistência MySQL — **implementado**. API REST + front-end web são **diferencial não implementado** (planejados como Fatia 8; o enunciado trata front-end como diferencial, não requisito).
 - **Arquitetura:** **monólito modular** com estilo **Hexagonal (Ports & Adapters)**. Regra de dependência inviolável: `adapters → application → domain`; o **domínio é puro** (sem I/O, sem framework) e não conhece as bordas. Ports (interfaces `Protocol`) são definidas em termos do domínio; adapters as implementam. DI manual no `composition_root.py`. Microsserviços são fora de escopo (over-engineering para o prazo e prejudica o "roda em < 5 min").
-- **Execução:** **Docker Compose** como caminho único do README (`docker compose up`), com **três containers separados: backend (API), frontend e dados (MySQL)**. O venv local permanece apenas como conveniência interna de desenvolvimento para rodar os testes rápido (não é caminho de entrega documentado).
-- **Entrypoint:** `Makefile` como porta de entrada única. Alvos de dev (`make install`, `make test`) usam o venv; alvos de execução/entrega (`make run`/`up`/`down`/`migrate`/`seed`/`logs`) orquestram o Docker Compose (implementados na fatia de infra). `make run` é o atalho principal (build + containers + migrations).
-- **Persistência:** **MySQL 8** em container próprio como store de registro (idempotência via `UPSERT`/chave natural `data_referência + hash_do_conjunto`; reprocessamento por data), acessado por adapter atrás do port `resultado_repository`. Driver/ORM a definir na fatia de persistência (provável SQLAlchemy + PyMySQL). Schema versionado (script de init ou migração) + healthcheck/espera do DB no compose. JSON exportado em `data/output/` permanece como relatório/entregável (requisito de exemplo de output).
-- **Front-end:** HTML + JS puro em container próprio (servidor estático leve, ex. nginx) consumindo a API do backend; **CORS** habilitado no backend.
+- **Execução (estado atual):** o **MySQL roda em container** (Docker Compose); a **aplicação roda do venv local** orquestrada pelo `Makefile` (`make install` + `make run`). O `README.md` documenta esse caminho e roda em < 5 min. O `docker compose up` de **caminho único com três containers** (backend + frontend + MySQL) é o **objetivo da Fatia 8** (diferencial), ainda não implementado.
+- **Entrypoint:** `Makefile` como porta de entrada única. Alvos de dev (`make install`, `make test`) usam o venv; `make up`/`down`/`logs` orquestram o container MySQL; `make migrate`/`run`/`run-live`/`seed`/`test-integration` combinam o MySQL (container) com a app (venv). `make run` sobe o MySQL, aplica o schema e roda a CLI uma vez com os defaults (cache-first); `make run-live` faz o mesmo consultando as APIs ao vivo.
+- **Persistência:** **MySQL 8** em container próprio como store de registro (idempotência via `UPSERT`/chave natural `data_referência + hash_do_conjunto`; reprocessamento por data), acessado por adapter atrás do port `resultado_repository`. Driver: **SQLAlchemy Core + PyMySQL**. Schema criado por `create_all` (migrações versionadas/Alembic fora de escopo) + healthcheck/espera do DB no compose. JSON exportado em `data/output/` (com um exemplo versionado em `examples/`) permanece como relatório/entregável (requisito de exemplo de output).
+- **Front-end (diferencial não implementado — Fatia 8):** planejado como HTML + JS puro em container próprio (servidor estático leve, ex. nginx) consumindo a API do backend, com **CORS** habilitado.
 - **Configuração:** defaults em arquivo versionado (thresholds de alerta, timeouts, modo live/cache) sobrescritíveis por env var / flag de CLI. Atende o requisito "limite configurável".
 
 ## Escopo — fora (explícito)
@@ -73,16 +73,17 @@ Estrutura:
 ```
 src/motor_cambial/
   domain/        # PURO: models, enums, rules/ (selecao_taxa, fallback_data, alertas), services/ (conversor, consolidador)
-  ports/         # interfaces: cotacao_provider, exposicao_repository, resultado_repository
+  ports/         # interfaces: cotacao_provider, resultado_repository
   application/   # use_cases/: consolidar_exposicoes, reprocessar_por_data
   adapters/
-    inbound/     # cli/, api/
+    inbound/     # cli/ (api/ = Fatia 8, não implementado)
     outbound/    # ptax/, frankfurter/, cache/, persistence/
   config.py      # thresholds (alerta configuravel), timeouts, modo live/cache
   composition_root.py
-tests/           # unit (dominio, alvo do TDD) | integration (APIs reais) | e2e
-frontend/        # front-end web
-data/            # exposicoes.json (entrada) + output/ (resultados)
+tests/           # unit (dominio, alvo do TDD) | integration (APIs + MySQL reais, opt-in)
+examples/        # exemplo de output versionado
+frontend/        # front-end web (Fatia 8, não implementado)
+data/            # exposicoes.json (entrada) + output/ (resultados, gerado) + cache/ (gerado)
 ```
 
 Rastreabilidade (fonte, data efetiva, tipo de taxa, se houve fallback) é atributo da model `Conversao` no domínio — segue o dado, não a borda.
@@ -94,3 +95,4 @@ O uso de IA generativa neste projeto é **rastreado explicitamente** em `.claude
 ## Convenções
 - Comunicação com o usuário em **português**.
 - Decisões técnicas e financeiras relevantes devem ser documentadas (para README e apresentação final).
+- **Documentação de entrega (versionada):** `README.md` (instalação/execução, < 5 min) e `DECISOES.md` (decisões técnicas/financeiras — roteiro da apresentação, cobre os itens 8 e 9 do enunciado). As specs internas de trabalho ficam em `docs/` (material de trabalho, **não versionado** por decisão do usuário).
