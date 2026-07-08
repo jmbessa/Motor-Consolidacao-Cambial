@@ -57,7 +57,7 @@ seed: ## Confirma a presença da massa de dados de exemplo (data/exposicoes.json
 		(echo "data/exposicoes.json ausente." && exit 1)
 
 run: migrate ## Sobe o MySQL, aplica o schema e roda a CLI uma vez com os defaults
-	$(VENV_PY) -m motor_cambial.adapters.inbound.cli.app
+	$(HOST_DB) $(VENV_PY) -m motor_cambial.adapters.inbound.cli.app
 
 clean: ## Derruba o container COM o volume e limpa caches locais
 	$(COMPOSE) down -v
