@@ -29,7 +29,9 @@ function esc(s) {
 
 const num = (s) => Number(s); // só para escala de pixels; nunca para exibir dinheiro
 
-// "646462.50" -> centavos inteiros (soma exata de BRL 2 casas)
+// "646462.50" -> centavos inteiros (soma exata de BRL 2 casas).
+// Assume 2 casas: todo dinheiro sai quantizado do servidor (ROUND_HALF_UP);
+// casas além da 2ª seriam truncadas — não deve ocorrer com o payload da API.
 function centavos(s) {
   const neg = String(s).trim().startsWith("-");
   const [i, d = ""] = String(s).replace("-", "").split(".");
@@ -61,6 +63,23 @@ function svgEl(tag, attrs, text) {
   for (const k in attrs) e.setAttribute(k, attrs[k]);
   if (text != null) e.textContent = text;
   return e;
+}
+
+// Extrai uma mensagem legível do corpo de erro da API. Os handlers custom
+// devolvem {erro: "..."}; a validação de corpo do FastAPI devolve
+// {detail: [{loc, msg, ...}]} — uma LISTA, que precisa ser achatada.
+function extrairErro(texto) {
+  try {
+    const j = JSON.parse(texto);
+    if (j.erro) return j.erro;
+    if (Array.isArray(j.detail)) {
+      return j.detail
+        .map((e) => `${(e.loc || []).slice(1).join(".") || "corpo"}: ${e.msg}`)
+        .join(" · ");
+    }
+    if (j.detail) return j.detail;
+  } catch (_) { /* corpo não-JSON: cai no texto cru */ }
+  return texto;
 }
 
 // ---- Estado / ciclo ----
@@ -105,9 +124,7 @@ async function consolidar(ev) {
     });
     const texto = await resp.text();
     if (!resp.ok) {
-      let detalhe = texto;
-      try { detalhe = JSON.parse(texto).erro || JSON.parse(texto).detail || texto; } catch (_) {}
-      throw new Error(`API respondeu ${resp.status}: ${detalhe}`);
+      throw new Error(`API respondeu ${resp.status}: ${extrairErro(texto)}`);
     }
     render(JSON.parse(texto));
     setStatus("");
@@ -229,7 +246,9 @@ function drawMatrix(consolidadas) {
       `divergência ${fmtPct(p.divergencia.percentual)} · ${fmtBRL(p.divergencia.absoluta_brl)}\n` +
       `PTAX ${fmtBRL(p.conversao_ptax.valor_brl)} · Frankfurter ${fmtBRL(p.conversao_frankfurter.valor_brl)}`));
     svg.appendChild(c);
-    svg.appendChild(svgEl("text", { x, y: y - r - 3, class: "pt-label" }, p.exposicao.id));
+    // rótulo acima do ponto; se colar no topo do gráfico, joga para baixo
+    const ly = (y - r - 3 < padT + 8) ? y + r + 11 : y - r - 3;
+    svg.appendChild(svgEl("text", { x, y: ly, class: "pt-label" }, p.exposicao.id));
   }
 }
 
@@ -237,7 +256,7 @@ function drawMatrix(consolidadas) {
 function drawCmp(totais) {
   const svg = $("cmp");
   svg.textContent = "";
-  const W = 360, H = 380, padL = 44, padR = 56, padT = 14, padB = 14;
+  const W = 360, H = 380, padL = 44, padR = 96, padT = 14, padB = 14;
   const plotW = W - padL - padR;
   const n = totais.length || 1;
   const rowH = (H - padT - padB) / n;
