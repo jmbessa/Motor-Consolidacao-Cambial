@@ -238,9 +238,9 @@ Escolhas de escopo, conscientes para o prazo de 5 dias:
   **uma vez** no `criar_app` e compartilhados por todas as requisições; só o envelope de cache é
   refeito por requisição (barato, preservando o `modo_live` por requisição). **Com mais tempo:**
   um `lifespan` fechando os clients no shutdown (hoje o SO os recupera na saída do processo).
-- **Só o MySQL em container.** A app roda do venv local. **Com mais tempo:** conteinerizaria a
-  aplicação para um `docker compose up` de caminho único, e adicionaria um modo de demo **sem
-  Docker** (ex.: SQLite) para reduzir o atrito do "roda em < 5 min".
+- **Docker ainda é pré-requisito** (para o MySQL, em qualquer um dos dois caminhos de execução —
+  ver README). **Com mais tempo:** um modo de demo **sem Docker** (ex.: SQLite) para eliminar
+  esse pré-requisito e reduzir ainda mais o atrito do "roda em < 5 min".
 - **Schema por `create_all`**, não migrações versionadas. **Com mais tempo:** Alembic, para
   evoluir o schema preservando a trilha de auditoria.
 - **Relatório de console detalhado por posição.** Cada exposição mostra o valor original e —
